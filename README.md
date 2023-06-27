@@ -4,6 +4,10 @@ Single header Arduino framework library for SHARP Memory LCD Displays, with Adaf
 ![IMG_0026](https://github.com/jrymk/SharpMemoryLCD/assets/39593345/5379979d-34dd-4bc9-a96e-de3c043a130e)
 ![IMG_0033](https://github.com/jrymk/SharpMemoryLCD/assets/39593345/bb936a27-98ff-4d61-85b8-a9f5a0ae288e)
 
+### Pinout
+The DISP pin is not used, just pull it to VCC.\
+External VCOM inversion signal is used, so pull EXTCOMIN to VCC. (I don't like having SPI transactions inside interupt timers, so invert via SPI won't work that well if display is not updated)
+
 ### Example
 ```cpp
 #include <SharpMemoryLCD.h>
