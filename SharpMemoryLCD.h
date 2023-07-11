@@ -1,10 +1,10 @@
 // Comment out to remove Adafruit GFX dependency. Only drawPixel will work.
-#define USE_ADAFRUIT_GFX
+#define USE_ADAFRUIT_GFX 0
 
 #include <Arduino.h>
 #include <SPI.h>
 
-#ifdef USE_ADAFRUIT_GFX
+#if USE_ADAFRUIT_GFX
 #include <Adafruit_GFX.h>
 #endif
 
@@ -29,7 +29,7 @@
 
 template<uint16_t _WIDTH, uint16_t _HEIGHT>
 class SharpMemoryLCD
-#ifdef USE_ADAFRUIT_GFX
+#if USE_ADAFRUIT_GFX
     : public Adafruit_GFX
 #endif
 {
@@ -42,7 +42,7 @@ public:
     uint8_t* frameBuffer = nullptr;
 
     SharpMemoryLCD(int cs, int extComIn) :
-#ifdef USE_ADAFRUIT_GFX
+#if USE_ADAFRUIT_GFX
             Adafruit_GFX(_WIDTH, _HEIGHT),
 #endif
             csPin(cs), extComInPin(extComIn),
