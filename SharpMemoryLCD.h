@@ -9,7 +9,7 @@
 #endif
 
 #define SPI_CLASS SPI
-#define SPI_CLOCK 8000000 // 8MHz
+#define SPI_CLOCK 15000000 // 15MHz
 
 #define MLCD_WHITE   0xFFFF
 #define MLCD_BLACK   0x0000
@@ -52,9 +52,9 @@ public:
 
     void begin() {
         pinMode(csPin, OUTPUT);
-        digitalWriteFast(csPin, LOW);
+        digitalWrite(csPin, LOW);
         pinMode(extComInPin, OUTPUT);
-        digitalWriteFast(extComInPin, LOW);
+        digitalWrite(extComInPin, LOW);
         SPI_CLASS.begin();
     }
 
@@ -69,7 +69,7 @@ public:
     virtual void update(uint16_t lineStart = 0, uint16_t lineEnd = _HEIGHT) {
         auto data = frameBuffer + (lineStart * _WIDTH / 8);
         SPI_CLASS.beginTransaction(spiSettings);
-        digitalWriteFast(csPin, HIGH);
+        digitalWrite(csPin, HIGH);
         SPI_CLASS.transfer(0b001);
         for (auto l = lineStart + 1; l <= lineEnd; l++) {
             SPI_CLASS.transfer(l); // SHARP starts its line index at 1, yeww!
@@ -79,7 +79,7 @@ public:
             SPI_CLASS.transfer(0x00); // dummy
         }
         SPI_CLASS.transfer(0x00); // dummy
-        digitalWriteFast(csPin, LOW);
+        digitalWrite(csPin, LOW);
         SPI_CLASS.endTransaction();
     }
 
@@ -114,7 +114,7 @@ public:
     void update(uint16_t lineStart = 0, uint16_t lineEnd = _HEIGHT) override {
         auto data = SharpMemoryLCD<_WIDTH, _HEIGHT>::frameBuffer + (lineStart * _WIDTH / 8);
         SPI_CLASS.beginTransaction(SharpMemoryLCD<_WIDTH, _HEIGHT>::spiSettings);
-        digitalWriteFast(SharpMemoryLCD<_WIDTH, _HEIGHT>::csPin, HIGH);
+        digitalWrite(SharpMemoryLCD<_WIDTH, _HEIGHT>::csPin, HIGH);
         SPI_CLASS.transfer(0b001);
         for (auto l = lineStart + 1; l <= lineEnd; l++) {
             SPI_CLASS.transfer(l);
@@ -124,7 +124,7 @@ public:
             SPI_CLASS.transfer(0x00); // dummy
         }
         SPI_CLASS.transfer(0x00); // dummy
-        digitalWriteFast(SharpMemoryLCD<_WIDTH, _HEIGHT>::csPin, LOW);
+        digitalWrite(SharpMemoryLCD<_WIDTH, _HEIGHT>::csPin, LOW);
         SPI_CLASS.endTransaction();
     }
 };
@@ -137,7 +137,7 @@ public:
     void update(uint16_t lineStart = 0, uint16_t lineEnd = _HEIGHT) override {
         auto data = SharpMemoryLCD<_WIDTH, _HEIGHT>::frameBuffer + (lineStart * _WIDTH / 8);
         SPI_CLASS.beginTransaction(SharpMemoryLCD<_WIDTH, _HEIGHT>::spiSettings);
-        digitalWriteFast(SharpMemoryLCD<_WIDTH, _HEIGHT>::csPin, HIGH);
+        digitalWrite(SharpMemoryLCD<_WIDTH, _HEIGHT>::csPin, HIGH);
         SPI_CLASS.transfer(0b001 | ((lineStart + 1) << 6)); // last 2 bits of address
         for (auto l = lineStart + 1; l <= lineEnd; l++) {
             SPI_CLASS.transfer(l >> 2);
@@ -147,7 +147,7 @@ public:
             SPI_CLASS.transfer((l + 1) << 6); // last 2 bits of next address
         }
         SPI_CLASS.transfer(0x00); // dummy
-        digitalWriteFast(SharpMemoryLCD<_WIDTH, _HEIGHT>::csPin, LOW);
+        digitalWrite(SharpMemoryLCD<_WIDTH, _HEIGHT>::csPin, LOW);
         SPI_CLASS.endTransaction();
     }
 };
