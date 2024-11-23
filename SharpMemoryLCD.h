@@ -9,7 +9,7 @@
 #endif
 
 #define SPI_CLASS SPI
-#define SPI_CLOCK 8000000 // 8MHz
+#define SPI_CLOCK 12000000 // 12MHz
 
 #define MLCD_WHITE   0xFFFF
 #define MLCD_BLACK   0x0000
@@ -21,10 +21,9 @@
 #define MLCD_MAGENTA 0b1111100000011111
 
 /*
- * DISP pin is not used, because it isn't really useful to turn the display off, it doesn't
- * really save any power or anything. Remember to pull it high.
- * EXTCOMIN pin is used, because software VCOM inversion by doing SPI transactions in interrupts
- * just feel less than ideal.
+ * DISP pin is not used, tie it to high because it isn't really useful to turn the display off, it doesn't
+ * save much power. stop updating the display does save quite some power.
+ * EXTCOMIN pin is not used, tie EXTMODE to low.
  */
 
 template<uint16_t _WIDTH, uint16_t _HEIGHT>
@@ -34,9 +33,13 @@ class SharpMemoryLCD
 #endif
 {
 protected:
-    int csPin = 10;
-    int extComInPin = 9;
+    int csPin = 10;                                       // defaults
+    int extComInPin = 9;                                  // defaults, set to negative value to use COM signal serial input (pull EXTMODE low)
+    const int vcomInvertMs = 100;                         // minimum 0.5hz, which means a cycle every 2 seconds, so invert every second at the very least?
+    const int invertOnUpdateTolerance = vcomInvertMs / 3; // prefer inverting on display data update to save time, only when there are no data updates after this time will the checkInvert function explicitly invert
+    uint32_t lastInversion = 0;
     SPISettings spiSettings;
+    bool vcomStatus = false;
 
 public:
     uint8_t* frameBuffer = nullptr;
@@ -67,10 +70,15 @@ public:
     }
 
     virtual void update(uint16_t lineStart = 0, uint16_t lineEnd = _HEIGHT) {
+        if (millis() - lastInversion >= vcomInvertMs) {
+            lastInversion = millis();
+            vcomStatus = !vcomStatus;
+        }
+        uint8_t mode = 0b001 | (vcomStatus ? 0b010 : 0b000); // data update mode with current VCOM status
         auto data = frameBuffer + (lineStart * _WIDTH / 8);
         SPI_CLASS.beginTransaction(spiSettings);
         digitalWriteFast(csPin, HIGH);
-        SPI_CLASS.transfer(0b001);
+        SPI_CLASS.transfer(mode);
         for (auto l = lineStart + 1; l <= lineEnd; l++) {
             SPI_CLASS.transfer(l); // SHARP starts its line index at 1, yeww!
             auto i = _WIDTH / 8;
@@ -83,11 +91,28 @@ public:
         SPI_CLASS.endTransaction();
     }
 
+    // this routine does not take much time, try calling it in the main loop
+    void checkInvert() {
+        if (millis() - lastInversion >= vcomInvertMs + invertOnUpdateTolerance)
+            invertVCOM();
+    }
+
     // call this periodically (minimum 0.5hz)
-    void VCOMInvert() {
-        digitalWrite(extComInPin, HIGH);
-        delayMicroseconds(1);
-        digitalWrite(extComInPin, LOW);
+    void invertVCOM() {
+        if (extComInPin < 0) {
+            SPI_CLASS.beginTransaction(spiSettings);
+            digitalWriteFast(csPin, HIGH);
+            SPI_CLASS.transfer(vcomStatus ? 0b010 : 0b000);
+            SPI_CLASS.transfer(0x00); // dummy
+            digitalWriteFast(csPin, LOW);
+            SPI_CLASS.endTransaction();
+        } else {
+            digitalWrite(extComInPin, HIGH);
+            delayMicroseconds(1);
+            digitalWrite(extComInPin, LOW);
+        }
+        lastInversion = millis();
+        vcomStatus = !vcomStatus;
     }
 };
 

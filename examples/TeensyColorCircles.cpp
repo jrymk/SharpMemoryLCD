@@ -1,14 +1,9 @@
 #include <SharpMemoryLCD.h>
-#include <SoftwareSerial.h>
-#include <TeensyTimerTool.h>
 
 LS013B7DH06 mlcd(10, 9);
-TeensyTimerTool::PeriodicTimer extComUpdate;
 
 void setup() {
-    Serial.begin(115200);
     mlcd.begin();
-    extComUpdate.begin([] { mlcd.VCOMInvert(); }, 500ms);
 }
 
 void loop() {

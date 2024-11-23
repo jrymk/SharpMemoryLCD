@@ -1,9 +1,7 @@
 #include <SharpMemoryLCD.h>
-#include <TeensyTimerTool.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
 
 LS027B7DH01 mlcd(10, 9);
-TeensyTimerTool::PeriodicTimer extComUpdate;
 
 bool game[12][16] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -43,7 +41,6 @@ uint64_t timer;
 
 void setup() {
     mlcd.begin();
-    extComUpdate.begin([] { mlcd.VCOMInvert(); }, 500ms);
     lastIteration = millis();
     mlcd.setFont(&FreeMonoBold12pt7b);
 }
