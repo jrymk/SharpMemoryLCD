@@ -1,10 +1,10 @@
 // Comment out to remove Adafruit GFX dependency. Only drawPixel will work.
-#define USE_ADAFRUIT_GFX
+#define USE_ADAFRUIT_GFX 0
 
 #include <Arduino.h>
 #include <SPI.h>
 
-#ifdef USE_ADAFRUIT_GFX
+#if USE_ADAFRUIT_GFX
 #include <Adafruit_GFX.h>
 #endif
 
@@ -28,7 +28,7 @@
 
 template<uint16_t _WIDTH, uint16_t _HEIGHT>
 class SharpMemoryLCD
-#ifdef USE_ADAFRUIT_GFX
+#if USE_ADAFRUIT_GFX
     : public Adafruit_GFX
 #endif
 {
@@ -45,7 +45,7 @@ public:
     uint8_t* frameBuffer = nullptr;
 
     SharpMemoryLCD(int cs, int extComIn) :
-#ifdef USE_ADAFRUIT_GFX
+#if USE_ADAFRUIT_GFX
             Adafruit_GFX(_WIDTH, _HEIGHT),
 #endif
             csPin(cs), extComInPin(extComIn),
@@ -55,9 +55,9 @@ public:
 
     void begin() {
         pinMode(csPin, OUTPUT);
-        digitalWriteFast(csPin, LOW);
+        digitalWrite(csPin, LOW);
         pinMode(extComInPin, OUTPUT);
-        digitalWriteFast(extComInPin, LOW);
+        digitalWrite(extComInPin, LOW);
         SPI_CLASS.begin();
     }
 
@@ -87,7 +87,7 @@ public:
             SPI_CLASS.transfer(0x00); // dummy
         }
         SPI_CLASS.transfer(0x00); // dummy
-        digitalWriteFast(csPin, LOW);
+        digitalWrite(csPin, LOW);
         SPI_CLASS.endTransaction();
     }
 
@@ -139,7 +139,7 @@ public:
     void update(uint16_t lineStart = 0, uint16_t lineEnd = _HEIGHT) override {
         auto data = SharpMemoryLCD<_WIDTH, _HEIGHT>::frameBuffer + (lineStart * _WIDTH / 8);
         SPI_CLASS.beginTransaction(SharpMemoryLCD<_WIDTH, _HEIGHT>::spiSettings);
-        digitalWriteFast(SharpMemoryLCD<_WIDTH, _HEIGHT>::csPin, HIGH);
+        digitalWrite(SharpMemoryLCD<_WIDTH, _HEIGHT>::csPin, HIGH);
         SPI_CLASS.transfer(0b001);
         for (auto l = lineStart + 1; l <= lineEnd; l++) {
             SPI_CLASS.transfer(l);
@@ -149,7 +149,7 @@ public:
             SPI_CLASS.transfer(0x00); // dummy
         }
         SPI_CLASS.transfer(0x00); // dummy
-        digitalWriteFast(SharpMemoryLCD<_WIDTH, _HEIGHT>::csPin, LOW);
+        digitalWrite(SharpMemoryLCD<_WIDTH, _HEIGHT>::csPin, LOW);
         SPI_CLASS.endTransaction();
     }
 };
@@ -162,7 +162,7 @@ public:
     void update(uint16_t lineStart = 0, uint16_t lineEnd = _HEIGHT) override {
         auto data = SharpMemoryLCD<_WIDTH, _HEIGHT>::frameBuffer + (lineStart * _WIDTH / 8);
         SPI_CLASS.beginTransaction(SharpMemoryLCD<_WIDTH, _HEIGHT>::spiSettings);
-        digitalWriteFast(SharpMemoryLCD<_WIDTH, _HEIGHT>::csPin, HIGH);
+        digitalWrite(SharpMemoryLCD<_WIDTH, _HEIGHT>::csPin, HIGH);
         SPI_CLASS.transfer(0b001 | ((lineStart + 1) << 6)); // last 2 bits of address
         for (auto l = lineStart + 1; l <= lineEnd; l++) {
             SPI_CLASS.transfer(l >> 2);
@@ -172,7 +172,7 @@ public:
             SPI_CLASS.transfer((l + 1) << 6); // last 2 bits of next address
         }
         SPI_CLASS.transfer(0x00); // dummy
-        digitalWriteFast(SharpMemoryLCD<_WIDTH, _HEIGHT>::csPin, LOW);
+        digitalWrite(SharpMemoryLCD<_WIDTH, _HEIGHT>::csPin, LOW);
         SPI_CLASS.endTransaction();
     }
 };
